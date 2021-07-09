@@ -22,3 +22,4 @@ jobs:
           token: ${{ secrets.PUSH_PAT }}
           repository: ""
           branch: "gh-pages"
+          cname: "gprb.me"
