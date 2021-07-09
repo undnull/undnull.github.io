@@ -21,6 +21,7 @@ banner:
 
 debug: false
 sitemap: false
+future: true
 lang: "en"
 
 highlighter: rouge
