@@ -1,0 +1,45 @@
+title: "GPRB"
+description: "From Russia with love!"
+copyright: "Copyright (c) 2021, Kirill GPRB. All Rights Reserved."
+theme: "jekyll-theme-yat"
+
+baseurl: "/"
+url: "https://undnull.github.com"
+#url: "https://gprb.me"
+
+yat:
+  date_format: "%Y.%m.%d, %H:%M"
+
+header_transparent: false
+header_pages:
+  - index.md
+  - categories.md
+
+banner:
+  height: 196px
+  image: "/assets/images/banners/index.png"
+
+debug: false
+sitemap: false
+lang: "en"
+
+highlighter: rouge
+markdown: kramdown
+kmarkdown:
+  input: GFM
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-spaceship
+
+exclude:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/
