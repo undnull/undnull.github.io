@@ -1,0 +1,23 @@
+name: "Build pages"
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu_latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles("**/Gemfile.lock") }}
+          restore-keys: ${{ runner.os }}-gems-
+      - uses: jeffreytse/jekyll-deploy-action@v0.2.1
+        with:
+          provider: "github"
+          token: ${{ secrets.GH_TOKEN }}
+          repository: ""
+          branch: "gh-pages"
