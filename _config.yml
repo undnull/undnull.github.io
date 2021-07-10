@@ -4,7 +4,7 @@ copyright: "Copyright (c) 2021, Kirill GPRB. All Rights Reserved."
 theme: "jekyll-theme-yat"
 
 baseurl: "/"
-url: "https://undnull.github.com"
+url: "https://undnull.github.io"
 #url: "https://gprb.me"
 
 yat:
@@ -14,17 +14,19 @@ header_transparent: false
 header_pages:
   - index.md
   - categories.md
+  - tags.md
 
 banner:
   height: 196px
   image: "/assets/images/banners/index.png"
 
+excerpt_size: 150
+
 debug: false
 sitemap: false
 future: true
-lang: "en"
 
-highlighter: rouge
+lang: "en"
 markdown: kramdown
 kmarkdown:
   input: GFM

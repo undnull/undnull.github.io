@@ -2,7 +2,7 @@
 layout: post
 title: "First post!"
 date: 2021-07-09 23:00 +5
-categories: jekyll
+tags: [jekyll]
 ---
 # A blog
 So I decided to replace the old site contents with a new fancy Jekyll-based blog.  
