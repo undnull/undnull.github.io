@@ -12,9 +12,9 @@ yat:
 
 header_transparent: false
 header_pages:
-  - index.md
-  - categories.md
-  - tags.md
+  - index.html
+  - categories.html
+  - tags.html
 
 banner:
   height: 196px
