@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>The V16 virtual CPU | GPRB</title>
+<meta name="generator" content="Jekyll v4.2.0">
+<meta property="og:title" content="The V16 virtual CPU">
+<meta property="og:locale" content="en">
+<meta name="description" content="I always have been amazed how fast 0x10c game skyrocketed, created a whole community of DCPU-16 programmers and then suddenly died leaving lots of content just like… abandoned. The DCPU-16 architecture inspired me to write an emulator for it which eventually became its own virtual CPU architecture called V16 (Virtual 16-bit VM, duh).">
+<meta property="og:description" content="I always have been amazed how fast 0x10c game skyrocketed, created a whole community of DCPU-16 programmers and then suddenly died leaving lots of content just like… abandoned. The DCPU-16 architecture inspired me to write an emulator for it which eventually became its own virtual CPU architecture called V16 (Virtual 16-bit VM, duh).">
+<link rel="canonical" href="https://undnull.github.io/2021/07/10/V16.html">
+<meta property="og:url" content="https://undnull.github.io/2021/07/10/V16.html">
+<meta property="og:site_name" content="GPRB">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2021-07-10T23:10:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="The V16 virtual CPU">
+<script type="application/ld+json">
+{"headline":"The V16 virtual CPU","dateModified":"2021-07-10T23:10:00+00:00","datePublished":"2021-07-10T23:10:00+00:00","description":"I always have been amazed how fast 0x10c game skyrocketed, created a whole community of DCPU-16 programmers and then suddenly died leaving lots of content just like… abandoned. The DCPU-16 architecture inspired me to write an emulator for it which eventually became its own virtual CPU architecture called V16 (Virtual 16-bit VM, duh).","url":"https://undnull.github.io/2021/07/10/V16.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://undnull.github.io/2021/07/10/V16.html"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="https://undnull.github.io/feed.xml" title="GPRB">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="GPRB" src="" onerror="this.style.display='none'">
+  GPRB
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/">HOME</a><a class="page-link" href="/categories.html">CATEGORIES</a><a class="page-link" href="/tags.html">TAGS</a>
+
+
+
+
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  (function() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  })();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>html .page-banner {
+      height:  72.128px;
+      min-height: 196px;
+    }
+    html[data-scroll-status="top"] .page-banner {
+      height: 196px;
+    }
+  </style>
+<section class="page-banner">
+    <div class="page-banner-img">
+<div style="background-image: url(/assets/images/banners/V16.png)"></div>
+        <img class="img-placeholder" src="/assets/images/banners/V16.png">
+</div>
+    <div class="wrapper">
+      <div class="page-banner-inner">
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">The V16 virtual CPU</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2021-07-10T23:10:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> 2021.07.10, 23:10
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 14 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#V16">#V16</a><a class="post-tag" href="/tags.html#C">#C</a>
+</div></header>
+</div>
+    </div>
+  </section><script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>I always have been amazed how fast 0x10c game skyrocketed, created a whole community of DCPU-16 programmers and then suddenly died leaving lots of content just like… abandoned. 
+The DCPU-16 architecture inspired me to write an emulator for it which eventually became its own virtual CPU architecture called V16 (Virtual 16-bit VM, duh).</p>
+
+<h2 id="version-history">Version history</h2>
+<h3 id="dcpu-emulator">DCPU emulator</h3>
+<p>When I firstly read about cancelled 0x10c game and DCPU-16, I really started looking forward to write a nice emulator for it so that I can write programs and possibly write an operating system for it. However, while the idea was growing and changing, other projects such as Refraction and Thorn started to take shape and I eventually forgot about that.</p>
+
+<h3 id="v16v1">V16v1</h3>
+<p>The first non-DCPU version had a lot of just wrong stuff that was making the instruction format hard to understand and bad in general: it still had pointer access within operands. This was obviously a bad idea because instructions could grow up to <strong>six</strong> words in size!<br>
+After a Habr post I decided to purge everything and put the project on hold for a while.
+<img src="/assets/images/V16v1.png" alt=""></p>
+
+<h3 id="v16v2-v16risc">V16v2: V16RISC</h3>
+<p>After some time I decided to get back to implementing a virtual machine but this time with a better architecture and instruction set: and I choose to make a RISC-like machine with 16-bit words as minimal addressable units with 1 to 3 word instruction length.<br>
+However after some time I was left unsatisfied with the results of my work: the VM core was fine but the assembler written in JavaScript was a pain in the ass for me since I wanted this thing to be buildable and runnable without any dependencies on a UNIX-like system.<br>
+So after some hesitation I decided to archive the <a href="https://github.com/undnull/V16RISC">repo</a> and again start working on a better architecture.</p>
+
+<h3 id="v16v3">V16v3</h3>
+<p>The final version is more like the first one. However a lot of stuff that was similar to DCPU-16 is now missing. This includes:</p>
+<ol>
+  <li>Pointer math in operands. Now V16RISC’s memory read/write instructions are used.</li>
+  <li>Complicated system of constants. The only flag operands have is <code class="language-plaintext highlighter-rouge">IMM</code> flag which tells the runtime that a constant value should be used instead of a register reference.</li>
+</ol>
+
+<p><img src="/assets/images/V16v3.png" alt=""></p>
+
+<p>The project’s <a href="https://github.com/undnull/V16">repo</a> contains four different projects:</p>
+<ul>
+  <li>The V16 library: the runtime’s core. Has no input or output functionality.</li>
+  <li>V16ASM: a simple 500 LoC assembler written in C.</li>
+  <li>V16DASM: a simple disassembler.</li>
+  <li>V16EXEC: a terminal-based runtime implementation.</li>
+  <li>V16SYS: a graphical runtime with other virtual hardware that should represent an authentic DCPU computer.</li>
+</ul>
+
+<h2 id="a-bit-of-docs">A bit of docs</h2>
+<h3 id="instruction-format">Instruction format</h3>
+<p>If the VM needs an another value, it reads the value at <code class="language-plaintext highlighter-rouge">memory[PC++]</code>.<br>
+Every instruction is at least one word wide. This word has the following structure:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Bits</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>15-10</td>
+      <td>The opcode</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>“A” operand <code class="language-plaintext highlighter-rouge">IMM</code> flag</td>
+    </tr>
+    <tr>
+      <td>8-5</td>
+      <td>“A” operand register number</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>“B” operand <code class="language-plaintext highlighter-rouge">IMM</code> flag</td>
+    </tr>
+    <tr>
+      <td>3-0</td>
+      <td>“B” operand register number</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The <code class="language-plaintext highlighter-rouge">IMM</code> flag means that a register number should be ignored and a constant value must be used. A constant value cannot be written to so instructions that write to a specific operand won’t do anything because the runtime will silently ignore them.</p>
+
+<h3 id="registers">Registers</h3>
+<p>There are 16 registers that can be accessed from any instruction. This means you can set any value to the program counter without any additional instructions like <code class="language-plaintext highlighter-rouge">JMP</code>.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>Register index</td>
+      <td>Common name</td>
+      <td>Description</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x00</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R0</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x01</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R1</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x02</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R2</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x03</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R3</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x04</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R4</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x05</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R5</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x06</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R6</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x07</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R7</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x08</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R8</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x09</code></td>
+      <td><code class="language-plaintext highlighter-rouge">R9</code></td>
+      <td>General-purpose register</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0A</code></td>
+      <td><code class="language-plaintext highlighter-rouge">RI</code></td>
+      <td>Counter (acts as a GPR)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0B</code></td>
+      <td><code class="language-plaintext highlighter-rouge">RJ</code></td>
+      <td>Counter (acts as a GPR)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0C</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IA</code></td>
+      <td>Interrupt routine address</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0D</code></td>
+      <td><code class="language-plaintext highlighter-rouge">OF</code></td>
+      <td>Overflow</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0E</code></td>
+      <td><code class="language-plaintext highlighter-rouge">SP</code></td>
+      <td>Stack pointer</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0F</code></td>
+      <td><code class="language-plaintext highlighter-rouge">PC</code></td>
+      <td>Program counter</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="communicating-between-devices">Communicating between devices</h3>
+<p>Again, built-in device support is in common with DCPU-16. But unlike DCPU-16 V16 uses x86-like IO ports to do this.</p>
+<pre><code class="language-asm">IOR $0x00FF, %R0    # Read port 0x00FF to R0
+IOW %R0, $0x000F    # Write R0 to port 0x000F
+</code></pre>
+<p>This approach, however, can be a bit slow if a device decides to do some time-consuming actions so be aware that sending and receiving data is a possible CPU time eliminator.</p>
+
+<p>The runtime library provides two callback functions for implementations to provide their own logic to communicate between devices and the CPU:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// value is guaranteed to be non-NULL.</span>
+<span class="k">static</span> <span class="n">bool</span> <span class="nf">IMPL_ioread</span><span class="p">(</span><span class="n">V16_vm_t</span> <span class="o">*</span><span class="n">vm</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">port</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="o">*</span><span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// We have a hit!</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">port</span> <span class="o">==</span> <span class="mh">0x00FF</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint16_t</span><span class="p">)</span><span class="n">getchar</span><span class="p">();</span>
+        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// If no value was written (eg. no device owns the specified port)</span>
+    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">IMPL_iowrite</span><span class="p">(</span><span class="n">V16_vm_t</span> <span class="o">*</span><span class="n">vm</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">port</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Writing at 0x00FF will result in putchar()</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">port</span> <span class="o">==</span> <span class="mh">0x00FF</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">putchar</span><span class="p">(</span><span class="n">value</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="memory-access">Memory access</h3>
+<blockquote>
+  <p>But how can I write stuff to the memory if I have no pointer math in instructions?!</p>
+</blockquote>
+
+<p>Well to counter that, two RISC-ish instructions are introduced:</p>
+<pre><code class="language-asm">MRD $0x8000, %R0    # Read memory[0x8000] to R0
+MWR %R0, $0x8A00    # Write R0 to memory[0x8A00]
+</code></pre>
+
+<h3 id="instruction-set">Instruction set</h3>
+<p>There are up to 64 possible instructions.<br>
+The following table shows all the defined instructions. All the logical operations (in descriptions) are in C syntax. All the opcodes that are <em>not</em> shown here are reserved and treated as invalid (the execution stops).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Opcode</th>
+      <th>Mnemonic</th>
+      <th>A mode</th>
+      <th>B mode</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x00</code></td>
+      <td><code class="language-plaintext highlighter-rouge">NOP</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Do nothing</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x01</code></td>
+      <td><code class="language-plaintext highlighter-rouge">HLT</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Halt and wait for interrupts</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x02</code></td>
+      <td><code class="language-plaintext highlighter-rouge">PTS</code></td>
+      <td>READ</td>
+      <td>N/A</td>
+      <td>Push to stack</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x03</code></td>
+      <td><code class="language-plaintext highlighter-rouge">PFS</code></td>
+      <td>WRITE</td>
+      <td>N/A</td>
+      <td>Pull from stack</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x04</code></td>
+      <td><code class="language-plaintext highlighter-rouge">CAL</code></td>
+      <td>READ</td>
+      <td>N/A</td>
+      <td>Call a subroutine</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x05</code></td>
+      <td><code class="language-plaintext highlighter-rouge">RET</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Return from a subroutine</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x06</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IOR</code></td>
+      <td>READ</td>
+      <td>WRITE</td>
+      <td>Read from an IO port</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x07</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IOW</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Write to an IO port</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x08</code></td>
+      <td><code class="language-plaintext highlighter-rouge">MRD</code></td>
+      <td>READ</td>
+      <td>WRITE</td>
+      <td>Read memory</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x09</code></td>
+      <td><code class="language-plaintext highlighter-rouge">MWR</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Write memory</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0A</code></td>
+      <td><code class="language-plaintext highlighter-rouge">CLI</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Disable interrupts</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0B</code></td>
+      <td><code class="language-plaintext highlighter-rouge">STI</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Enable interrupts</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0C</code></td>
+      <td><code class="language-plaintext highlighter-rouge">INT</code></td>
+      <td>READ</td>
+      <td>N/A</td>
+      <td>Trigger an interrupt</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x0D</code></td>
+      <td><code class="language-plaintext highlighter-rouge">RFI</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Return from interrupt routine</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x20</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IEQ</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Skip next if <code class="language-plaintext highlighter-rouge">!(B == A)</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x21</code></td>
+      <td><code class="language-plaintext highlighter-rouge">INE</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Skip next if <code class="language-plaintext highlighter-rouge">!(B != A)</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x22</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IGT</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Skip next if <code class="language-plaintext highlighter-rouge">!(B &gt;  A)</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x23</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IGE</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Skip next if <code class="language-plaintext highlighter-rouge">!(B &gt;= A)</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x24</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ILT</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Skip next if <code class="language-plaintext highlighter-rouge">!(B &lt;  A)</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x25</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ILE</code></td>
+      <td>READ</td>
+      <td>READ</td>
+      <td>Skip next if <code class="language-plaintext highlighter-rouge">!(B &lt;= A)</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">MOV</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ADD</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B + A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">SUB</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B - A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">MUL</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B * A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DIV</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td>
+<code class="language-plaintext highlighter-rouge">B = B / A</code> or <code class="language-plaintext highlighter-rouge">B = 0</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">MOD</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td>
+<code class="language-plaintext highlighter-rouge">B = B % A</code> or <code class="language-plaintext highlighter-rouge">B = A</code>
+</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">SHL</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B &lt;&lt; A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">SHR</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B &gt;&gt; A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">AND</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B &amp; A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">BOR</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B | A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">XOR</code></td>
+      <td>READ</td>
+      <td>READWRITE</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B ^ A</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">NOT</code></td>
+      <td>READWRITE</td>
+      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">B = ~B</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">INC</code></td>
+      <td>READWRITE</td>
+      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B + 1</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x30</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DEC</code></td>
+      <td>READWRITE</td>
+      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">B = B - 1</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="interrupts">Interrupts</h3>
+<p>When the attention is needed to a device, an interrupt is triggered. There’s an interrupt queue of 256 interrupts. If the queue grows over 256, the execution stops.<br>
+Interrupt routine is a subroutine which returns using <code class="language-plaintext highlighter-rouge">RFI</code> instruction. When this routine is called, the value of R0 register is pushed to the stack and replaced with an argument. The routine address is stored in the IA register.</p>
+
+<h3 id="assembly-syntax">Assembly syntax</h3>
+<p>Since the assembler is written in just two days, it lacks a lot of stuff like directives. However it is already possible to write some cool code with it. The basic syntax is:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[label:] &lt;mnemonic&gt; [&lt;prefix&gt;argument[, &lt;prefix&gt;argument]] [# comment]
+</code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>label</td>
+      <td>A current PC position right before an instruction starts.</td>
+    </tr>
+    <tr>
+      <td>mnemonic</td>
+      <td>An opcode translated into human-readable form.</td>
+    </tr>
+    <tr>
+      <td>prefix</td>
+      <td>An operand prefix. <code class="language-plaintext highlighter-rouge">$</code> for constants, <code class="language-plaintext highlighter-rouge">%</code> for registers.</td>
+    </tr>
+    <tr>
+      <td>argument</td>
+      <td>An identifier (label’s name, register’s name) or a number.</td>
+    </tr>
+    <tr>
+      <td>comment</td>
+      <td>Ignored.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Example code (<a href="https://github.com/undnull/V16/blob/master/prog/ASCIItest.S">link</a>):</p>
+<pre><code class="language-asm"># ASCIItest.S - prints the ASCII table
+# in seven colors, than freezes.
+mov $0x8000, %r0
+mov $0x0800, %r1
+loop:
+    ige $0x0FFF, %r1
+    mov $end, %pc
+    mwr %r1, %r0
+    inc %r0
+    inc %r1
+    mov $loop, %pc
+end:
+    mov $end, %pc
+</code></pre>
+
+<h2 id="hardware-devices">Hardware devices</h2>
+<h3 id="lpm-25">LPM-25</h3>
+<p>LPM25 is a 320x200 pixel color display compatible with V16 hardware. The display is split into 4x8 pixel cells which displays a colored character making a 80x25 grid of characters.<br>
+LPM25 has no internal video memory: instead it uses the internal V16 memory in read-only mode.<br>
+The display reads from the memory at constant rate of 50 times per second (50 Hz).<br>
+LPM25 reads text data from memory at TEXT_OFF address. Each text cell consists of three parts:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Bits</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0-3</td>
+      <td>Background color.</td>
+    </tr>
+    <tr>
+      <td>4-7</td>
+      <td>Foreground color.</td>
+    </tr>
+    <tr>
+      <td>8-15</td>
+      <td>8-bit ASCII code.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The glyps for characters are also read from memory at CHAR_OFF address. Each glyph is a 32-bit big-endian value divided by eight quartets representing a row in the glyph (The default ‘A’ character is equal to 0x04AAEAAA).</p>
+
+<p>LPM-25 provides a hardware cursor that looks like a character with inverted colors.<br>
+The cursor offset can be set via <code class="language-plaintext highlighter-rouge">CUR_OFF</code> register. Cursor can blink with interval set via <code class="language-plaintext highlighter-rouge">CUR_BLINK</code> register. If the blink interval is set to zero, cursor is always visible.</p>
+
+<p>LPM-25 uses a bunch of IO ports to communicate with the CPU:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Port number</th>
+      <th>Port name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x1F01</code></td>
+      <td><code class="language-plaintext highlighter-rouge">TEXT_OFF</code></td>
+      <td>Text data pointer.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x1F02</code></td>
+      <td><code class="language-plaintext highlighter-rouge">CHAR_OFF</code></td>
+      <td>Charset pointer.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x1F03</code></td>
+      <td><code class="language-plaintext highlighter-rouge">CUR_POS</code></td>
+      <td>Cursor position.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x1F04</code></td>
+      <td><code class="language-plaintext highlighter-rouge">CUR_BLINK</code></td>
+      <td>Cursor blink interval (in milliseconds).</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="/assets/images/LPM25.gif" alt=""></p>
+
+<h3 id="generic-keyboard">Generic keyboard</h3>
+<p>When a key is pressed, the device triggers an interrupt with argument value of <code class="language-plaintext highlighter-rouge">0x000F</code>.<br>
+Within the interrupt handler, a value can be read from port <code class="language-plaintext highlighter-rouge">0x000F</code>. This value can be:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>Value</td>
+      <td>Description</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF01</code></td>
+      <td>Backspace</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF02</code></td>
+      <td>Return (Enter)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF03</code></td>
+      <td>Insert</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF04</code></td>
+      <td>Delete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF05</code></td>
+      <td>Up arrow</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF06</code></td>
+      <td>Down arrow</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF07</code></td>
+      <td>Left arrow</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF08</code></td>
+      <td>Right arrow</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF09</code></td>
+      <td>Shift</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0xFF0A</code></td>
+      <td>Ctrl</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">0x00**</code></td>
+      <td>8-bit ASCII code</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="whats-next">What’s next?</h2>
+<p>At that point I have no plans of actively continuing the development but I consider writing this VM and utilities a big experience in C programming ;)</p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/2021/07/09/first-post.html" title="First post!">First post!</a><span></span>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/2021/07/09/first-post.html" title="">First post!</a></li>
+<li><a class="post-link" href="/2021/07/10/V16.html" title="">The V16 virtual CPU</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+      <div>Copyright (c) 2021, Kirill GPRB. All Rights Reserved. </div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="http://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
